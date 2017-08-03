@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drawing tools</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+        /* Always set the map height explicitly to define the size of the div
+         * element that contains the map. */
+        #map {
+            height: 100%;
+        }
+        /* Optional: Makes the sample page fill the window. */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWINTsXZt-IIHO6lW2ND08aBEJaC150Zs&libraries=drawing"/>-->
+<script>
+    // This example requires the Drawing library. Include the libraries=drawing
+    // parameter when you first load the API. For example:
+
+
+    function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 17.4234, lng: 78.3806},
+            zoom: 14
+        })
+
+        var drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: google.maps.drawing.OverlayType.MARKER,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_CENTER,
+                drawingModes: [ 'polygon', 'polyline']
+            },
+            markerOptions: {icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png'},
+            circleOptions: {
+                fillColor: '#ffff00',
+                fillOpacity: 1,
+                strokeWeight: 5,
+                clickable: false,
+                editable: false,
+                zIndex: 1
+            }
+        });
+
+        google.maps.event.addListener(drawingManager, 'polylinecomplete', function(line) {
+            //alert(line.getPath().getArray().toString());
+            if (typeof $pline != 'undefined') $pline.setMap(null);
+            $pline = line;
+
+            //$polyintersects.clear();
+
+            findIntersection(line);
+
+            //document.findElementById("Intersects").innerHTML =
+
+            for(var i = 0; i < $polyarray.length; i++)
+            {
+                $polyarray[i].setOptions({strokeWeight: 2.0, fillColor: 'white'});
+            }
+
+            for(var i = 0; i < $polyintersects.length; i++)
+            {
+                $polyintersects[i].setOptions({strokeWeight: 6.0, fillColor: 'red'});
+            }
+            alert("you have " + $polyintersects.length + " intersects");
+        });
+
+        google.maps.event.addListener(drawingManager, 'polygoncomplete', function(polygon) {
+            //alert(polygon.geodesic);
+            if (typeof $polyarray == 'undefined') $polyarray = [];
+            $polyarray.push(polygon);
+            //var present = google.maps.geometry.poly.containsLocation($pline.getPath().getArray()[0], polygon);
+            //alert(present);
+            //alert($polyarray);
+
+        });
+
+        drawingManager.setMap(map);
+    }
+
+    function findIntersection(line)
+    {
+        if (typeof $polyintersects == 'undefined') $polyintersects = [];
+        //var present = google.maps.geometry.poly.containsLocation(line.getPath().getArray()[0], $polyarray[0]);
+        //alert(present);
+        $polyintersects = [];
+        var paths = line.getPath().getArray();
+        for(var i = 0; i < paths.length-1; i++)
+        {
+            var lat = paths[i].lat();
+            var lng = paths[i].lng();
+            var lat2 = paths[i+1].lat();
+            var lng2 = paths[i+1].lng();
+
+            var incrementlat = (lat2 - lat)/20;
+            var incrementlng = (lng2 - lng)/20;
+            //alert(incrementlat);
+            //alert(incrementlng);
+            for(var j = 0; j < 20; j++)
+            {
+                var lt = lat + incrementlat*j;
+                var ln = lng + incrementlng*j;
+                containsInPolygon(lt, ln);
+            }
+
+            //containsInPolygon(lat, lng);
+            //containsInPolygon(lat2, lng2);
+        }
+
+        /*for(var i = 0; i < $polyarray.length; i++)
+        {
+            var present = google.maps.geometry.poly.containsLocation(line.getPath().getArray()[0], $polyarray[i]);
+            //alert(present);
+            if(present)
+                if($polyintersects.indexOf($polyarray[i]) == -1) $polyintersects.push($polyarray[i]);
+        }*/
+
+
+    }
+
+    function containsInPolygon(lat, lng)
+    {
+        //alert(lat);alert(lng);
+        var position = new google.maps.LatLng(lat, lng);
+        //alert(position);
+        for(var i = 0; i < $polyarray.length; i++)
+        {
+            var present = google.maps.geometry.poly.containsLocation(position, $polyarray[i]);
+            //alert(present);
+            if(present)
+                if($polyintersects.indexOf($polyarray[i]) == -1) $polyintersects.push($polyarray[i]);
+        }
+    }
+
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWINTsXZt-IIHO6lW2ND08aBEJaC150Zs&libraries=drawing,geometry&callback=initMap"
+        async defer></script>
+<!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWINTsXZt-IIHO6lW2ND08aBEJaC150Zs&libraries=geometry&callback=initMap"-->
+        <!--async defer></script>-->
+</body>
+</html>
